@@ -1,33 +1,38 @@
 # shopify-ai-analytics
-AI-Powered Shopify Dashboard
+Shopify AI Analytics
+**AI-Powered Shopify Dashboard**
 
 This project is an AI-powered e-commerce dashboard that integrates Shopify, Pinecone, and Hugging Face models to provide real-time insights and question-answering for Shopify store data. The dashboard allows you to fetch, index, and query your Shopify product and order data using advanced machine learning models to generate useful insights.
 
+## Features
+- **Shopify Data Integration**: Fetches real-time product and sales data from Shopify stores.
+- **Pinecone Indexing**: Indexes product and sales data into Pinecone for fast retrieval.
+- **AI-Powered Insights**: Uses Hugging Face transformers for question-answering (QA) on indexed data.
+- **RAG (Retrieval-Augmented Generation)**: Combines retrieval from Pinecone with natural language understanding to answer user queries.
+- **REST API**: Exposes an API for querying data and retrieving AI-generated insights.
 
-Features
-Shopify Data Integration: Fetches real-time product and sales data from Shopify stores.
-Pinecone Indexing: Indexes product and sales data into Pinecone for fast retrieval.
-AI-Powered Insights: Uses Hugging Face transformers for question-answering (QA) on indexed data.
-RAG (Retrieval-Augmented Generation): Combines retrieval from Pinecone with natural language understanding to answer user queries.
-REST API: Exposes an API for querying data and retrieving AI-generated insights.
+## Technologies Used
+- **Shopify API**: To access store products and orders.
+- **Pinecone**: For vector-based indexing and searching.
+- **OpenAI**: For language models and data analysis.
+- **Hugging Face Transformers**: To leverage models like RoBERTa for question answering.
+- **Django REST Framework**: For building the backend API.
 
-Technologies Used
-Shopify API: To access store products and orders.
-Pinecone: For vector-based indexing and searching.
-OpenAI: For language models and data analysis.
-Hugging Face Transformers: To leverage models like RoBERTa for question answering.
-Django REST Framework: For building the backend API.
-Requirements
-Python 3.7+
-Django
-Pinecone SDK
-Hugging Face transformers
-Shopify API credentials
-OpenAI API Key
-Setup Instructions
-1. Clone the repository
+## Requirements
+- Python 3.7+
+- Django
+- Pinecone SDK
+- Hugging Face transformers
+- Shopify API credentials
+- OpenAI API Key
+
+## Setup Instructions
+
+### 1. Clone the repository
+```bash
 git clone https://github.com/YOUR_USERNAME/ai-shopify-dashboard.git
 cd ai-shopify-dashboard
+
 
 2. Install dependencies
 pip install -r requirements.txt
