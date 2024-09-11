@@ -31,7 +31,7 @@ This project is an AI-powered e-commerce dashboard that integrates Shopify, Pine
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/aminakm123/shopify-ai-analytics.git
-cd ai-shopify-dashboard
+cd shopify-ai-analytics
 ```
 
 ### 2. Install dependencies
@@ -73,7 +73,7 @@ The response should look like:
 ### Project Structure
 
 ```plaintext
-ai-shopify-dashboard/
+shopify-ai-analytics/
 ├── ecommerce/
 │   ├── models.py              # Define Django models (if needed)
 │   ├── views.py               # Define the API view functions
