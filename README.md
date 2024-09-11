@@ -89,15 +89,15 @@ ai-shopify-dashboard/
 ├── manage.py                 # Django entry point
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation
+```
 
+### Future Enhancements
+- **Data Visualizations**: Add charts and graphs to visualize product and sales insights.
+- **Additional NLP Models**: Experiment with other Hugging Face models (like GPT-3 for text generation).
+- **Real-Time Data Sync**: Automate syncing Shopify data periodically to keep the index up-to-date.
+- **Custom Queries**: Add support for more complex queries like product comparisons or trend analysis.
 
-Future Enhancements
-Data Visualizations: Add charts and graphs to visualize product and sales insights.
-Additional NLP Models: Experiment with other Hugging Face models (like GPT-3 for text generation).
-Real-Time Data Sync: Automate syncing Shopify data periodically to keep the index up-to-date.
-Custom Queries: Add support for more complex queries like product comparisons or trend analysis.
-
-Contributing
+### Contributing
 If you'd like to contribute, please open an issue or submit a pull request!
 
 
