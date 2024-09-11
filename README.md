@@ -32,12 +32,12 @@ This project is an AI-powered e-commerce dashboard that integrates Shopify, Pine
 ```bash
 git clone https://github.com/YOUR_USERNAME/ai-shopify-dashboard.git
 cd ai-shopify-dashboard
+```
 
-
-2. Install dependencies
+### 2. Install dependencies
 pip install -r requirements.txt
 
-3. Set up environment variables
+### 3. Set up environment variables
 Create a .env file in the project root and add the following:
 PINECONE_API_KEY="your_pinecone_api_key"
 PINECONE_ENVIRONMENT="us-west1-gcp"
@@ -46,17 +46,17 @@ SHOPIFY_API_KEY="your_shopify_api_key"
 SHOPIFY_PASSWORD="your_shopify_password"
 SHOPIFY_STORE_URL="https://your-store.myshopify.com/admin"
 
-4. Initialize Pinecone
+### 4. Initialize Pinecone
 Ensure Pinecone is initialized and the index is created before running the app:
 python
 >>> import pinecone
 >>> pinecone.init(api_key='your_pinecone_api_key', environment='us-west1-gcp')
 >>> index = pinecone.Index("ecommerce_data")
 
-5. Run the application
+### 5. Run the application
 python manage.py runserver
 
-6. Test the API
+### 6. Test the API
 You can now test the API using curl or any HTTP client:
 curl "http://127.0.0.1:8000/get-insights?query=How%20many%20sales%20are%20in%20the%20electronics%20category?"
 
@@ -68,7 +68,7 @@ The response should look like:
   }
 }
 
-P## Project Structure
+### Project Structure
 
 ```plaintext
 ai-shopify-dashboard/
