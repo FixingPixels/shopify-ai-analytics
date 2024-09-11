@@ -30,7 +30,7 @@ This project is an AI-powered e-commerce dashboard that integrates Shopify, Pine
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-shopify-dashboard.git
+git clone https://github.com/aminakm123/shopify-ai-analytics.git
 cd ai-shopify-dashboard
 ```
 
