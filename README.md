@@ -61,12 +61,14 @@ You can now test the API using curl or any HTTP client:
 curl "http://127.0.0.1:8000/get-insights?query=How%20many%20sales%20are%20in%20the%20electronics%20category?"
 
 The response should look like:
+```bash
 {
   "insights": {
     "answer": "There are 150 sales in the electronics category.",
     "score": 0.95
   }
 }
+```
 
 ### Project Structure
 
