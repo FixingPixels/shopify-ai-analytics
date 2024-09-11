@@ -63,9 +63,10 @@ The response should look like:
   }
 }
 
-Project Structure
+P## Project Structure
+
+```plaintext
 ai-shopify-dashboard/
-│
 ├── ecommerce/
 │   ├── models.py              # Define Django models (if needed)
 │   ├── views.py               # Define the API view functions
@@ -81,6 +82,7 @@ ai-shopify-dashboard/
 ├── manage.py                 # Django entry point
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation
+
 
 Future Enhancements
 Data Visualizations: Add charts and graphs to visualize product and sales insights.
