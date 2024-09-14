@@ -123,3 +123,14 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
+
+SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
+SHOPIFY_API_SECRET = os.getenv('SHOPIFY_API_SECRET')
+SHOPIFY_ACCESS_TOKEN = os.getenv('SHOPIFY_ACCESS_TOKEN')
+SHOP_NAME = os.getenv('SHOP_NAME')
