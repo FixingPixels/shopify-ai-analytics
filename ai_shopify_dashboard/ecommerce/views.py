@@ -36,19 +36,19 @@ if response.status_code == 200:
 else:
     print(f"Error {response.status_code}: {response.json()}")
     
-@api_view(['GET'])
-def get_insights(request):
-    query = request.query_params.get('query', '')
+# @api_view(['GET'])
+# def get_insights(request):
+#     query = request.query_params.get('query', '')
 
-    if query:
-        # Index Shopify data if necessary
-        index_shopify_data()
+#     if query:
+#         # Index Shopify data if necessary
+#         index_shopify_data()
 
-        # Get AI-powered insights
-        response = query_with_rag(query)
-        return Response({"insights": response})
+#         # Get AI-powered insights
+#         response = query_with_rag(query)
+#         return Response({"insights": response})
     
-    return Response({"error": "No query provided."})
+#     return Response({"error": "No query provided."})
 
 # Function to set up Shopify session
 def shopify_session():
@@ -57,20 +57,44 @@ def shopify_session():
     shopify.ShopifyResource.set_site(shop_url)
 
 # Fetch products from Shopify
+# @api_view(['GET'])
+# def get_shopify_products(request):
+#     print("get shopify products request ")
+#     print(f"Request type - get shopify products: {type(request)}")
+#     shopify_session()
+#     products = shopify.Product.find()
+#     product_list = []
+#     for product in products:
+#         product_list.append({
+#         "id": product.id,
+#         "title": product.title,
+#         "inventory_quantity":
+#         product.variants[0].inventory_quantity,
+#         "price": product.variants[0].price
+#     })
+#     return Response({"products": product_list})
+    
 @api_view(['GET'])
 def get_shopify_products(request):
-    shopify_session()
-    products = shopify.Product.find()
-    product_list = []
-    for product in products:
-        product_list.append({
-        "id": product.id,
-        "title": product.title,
-        "inventory_quantity":
-        product.variants[0].inventory_quantity,
-        "price": product.variants[0].price
-    })
-    return Response({"products": product_list})
+    print(f"Request type - get shopify products: {type(request)}")
+    try:
+        shopify_session()  # Establish the session with Shopify
+        products = shopify.Product.find()  # Fetch products from Shopify
+        
+        product_list = []
+        for product in products:
+            product_list.append({
+                "id": product.id,
+                "title": product.title,
+                "inventory_quantity": product.variants[0].inventory_quantity,
+                "price": product.variants[0].price
+            })
+        
+        return Response({"products": product_list})
+    
+    except Exception as e:
+        print("Error fetching Shopify products:", str(e))
+        return Response({"error": str(e)}, status=500)
 
 # Fetch recent orders from Shopify
 @api_view(['GET'])
@@ -95,17 +119,34 @@ def get_shopify_orders(request):
     return Response({"orders": order_list})
 
 # Fetch customer data from Shopify
+# @api_view(['GET'])
+# def get_shopify_customers(request):
+#     shopify_session()
+#     customers = shopify.Customer.find()
+#     customer_list = []
+#     for customer in customers:
+#         customer_list.append({
+#             "id": customer.id,
+#             "email": customer.email,
+#             "first_name": customer.first_name,
+#             "last_name": customer.last_name,
+#             "orders_count": customer.orders_count
+#         })
+#     return Response({"customers": customer_list})
+
+
 @api_view(['GET'])
 def get_shopify_customers(request):
     shopify_session()
     customers = shopify.Customer.find()
     customer_list = []
     for customer in customers:
+        print(vars(customer))
         customer_list.append({
             "id": customer.id,
-            "email": customer.email,
-            "first_name": customer.first_name,
-            "last_name": customer.last_name,
-            "orders_count": customer.orders_count
+            "email": getattr(customer, 'email', 'N/A'),  # Handle missing email attribute
+            "first_name": getattr(customer, 'first_name', 'N/A'),
+            "last_name": getattr(customer, 'last_name', 'N/A'),
+            "orders_count": getattr(customer, 'orders_count', 0)
         })
     return Response({"customers": customer_list})
