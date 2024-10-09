@@ -1,7 +1,41 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pinecone_integration.pinecone_helper import index_shopify_data, query_with_rag
+import shopify
+import os
+from decouple import config
+import requests
+from requests.auth import HTTPBasicAuth
 
+
+# Function to load .env variables
+def load_env(file_path):
+    with open(file_path) as f:
+        for line in f:
+            if line.startswith("#") or not line.strip():
+                continue  # Skip comments and empty lines
+            key, value = line.strip().split("=", 1)
+            os.environ[key] = value.strip('"')
+
+base_dir = os.path.dirname(os.path.abspath(__file__))  # Get the current directory
+env_path = os.path.join(base_dir, '.env')
+load_env(env_path)
+
+SHOP_NAME = os.getenv('SHOPIFY_STORE_NAME')
+API_KEY = os.getenv('SHOPIFY_API_KEY')
+PASSWORD = os.getenv('SHOPIFY_PASSWORD')
+SHOP_URL =f"https://{API_KEY}:{PASSWORD}@{SHOP_NAME}/admin/api/2023-04"
+
+url = f'https://{SHOP_NAME}.myshopify.com/admin/api/2023-04/products.json'
+
+response = requests.get(url, auth=HTTPBasicAuth(API_KEY, PASSWORD))
+
+if response.status_code == 200:
+    products = response.json()
+    print("products",products)
+else:
+    print(f"Error {response.status_code}: {response.json()}")
+    
 @api_view(['GET'])
 def get_insights(request):
     query = request.query_params.get('query', '')
@@ -16,33 +50,10 @@ def get_insights(request):
     
     return Response({"error": "No query provided."})
 
-import shopify
-from django.shortcuts import render
-from django.http import JsonResponse
-
-def connect_shopify():
-    shop_url = f"https://{companion}.myshopify.com/admin/api/2023-04"
-    session = shopify.Session(shop_url, "2023-04", "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")
-    shopify.ShopifyResource.activate_session(session)
-    return session
-
-
-
-import shopify
-import os
-from decouple import config
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
-# Initialize Shopify API session
-SHOP_NAME = config('SHOPIFY_STORE_NAME')
-API_KEY = config('SHOPIFY_API_KEY')
-PASSWORD = config('SHOPIFY_PASSWORD')
-SHOP_URL =f"https://{API_KEY}:{PASSWORD}@{SHOP_NAME}/admin/api/2023-04"
-
 # Function to set up Shopify session
 def shopify_session():
     shop_url =f"https://{API_KEY}:{PASSWORD}@{SHOP_NAME}.myshopify.com/admin"
+    print("shop url ",shop_url)
     shopify.ShopifyResource.set_site(shop_url)
 
 # Fetch products from Shopify
