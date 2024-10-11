@@ -65,7 +65,7 @@ if index_name not in pc.list_indexes().names():
 index = pc.Index(index_name)
 
 @api_view(['GET'])
-def get_insights(request):    
+def get_insights(request):
     query = request.query_params.get('query', '')
 
     if query:
@@ -82,9 +82,15 @@ def get_insights(request):
                     "inventory_quantity": product.variants[0].inventory_quantity,
                     "price": float(product.variants[0].price)
                 })
-            
-            # Check for direct match in product list
-            direct_match = next((product for product in product_list if product['title'].lower() in query.lower()), None)
+
+            # Prepare a list for exact matches
+            exact_matches = []
+
+            # Find all exact matches in product list
+            for product in product_list:
+                if (product['title'].lower() == query.lower() and
+                        product['inventory_quantity'] == 0):  # Change this condition as needed for inventory quantity
+                    exact_matches.append(product)
 
             # Prepare vectors for Pinecone indexing
             vectors = []
@@ -106,19 +112,26 @@ def get_insights(request):
             if vectors:
                 upsert_response = index.upsert(vectors)
 
-            # If there is a direct match, respond immediately
-            if direct_match:
-                availability = 'in stock' if direct_match['inventory_quantity'] > 0 else 'out of stock'
+            # If there are exact matches, respond immediately
+            if exact_matches:
+                response_data = []
+                for match in exact_matches:
+                    availability = 'in stock' if match['inventory_quantity'] > 0 else 'out of stock'
+                    response_data.append({
+                        "title": match['title'],
+                        "availability": availability,
+                        "inventory_quantity": match['inventory_quantity'],
+                        "price": match['price']
+                    })
                 return Response({
-                    "message": f"The {direct_match['title']} is {availability} with {direct_match['inventory_quantity']} units available."
+                    "message": "Exact matches found.",
+                    "matches": response_data
                 })
 
-            # Search the Pinecone index using the query
+            # Search the Pinecone index using the query if no direct match was found
             pinecone_response = index.query(vector=create_vector_from_product({'title': query, 'price': '0.00', 'inventory_quantity': 0}), top_k=10, include_metadata=True)
-            
             context = " ".join([match['metadata']['text'] for match in pinecone_response['matches']]) if pinecone_response['matches'] else "No relevant data found"
             
-
             # Generate AI-powered response using Hugging Face's QA pipeline
             response = qa_pipeline(question=query, context=context)
             
@@ -137,18 +150,102 @@ def get_insights(request):
                     "related_products": []
                 }
 
-                # Determine related products based on query context
-                if "available" in query.lower():
+                # Dynamic handling based on the query context
+                if "out of stock" in query.lower() or "currently out of stock" in query.lower():
+                    # Only add products that are out of stock
+                    for match in pinecone_response['matches']:
+                        if match['metadata'].get('inventory_quantity', 0) == 0:
+                            fallback_response["related_products"].append(match['metadata']['text'])
+
+                elif "low stock" in query.lower():
+                    # Add products that have low stock (for example, below a threshold of 5)
+                    low_stock_threshold = 5
+                    for match in pinecone_response['matches']:
+                        if match['metadata'].get('inventory_quantity', 0) < low_stock_threshold:
+                            fallback_response["related_products"].append(match['metadata']['text'])
+
+                elif "in stock" in query.lower():
+                    # Only add products that are in stock
+                    for match in pinecone_response['matches']:
+                        if match['metadata'].get('inventory_quantity', 0) > 0:
+                            fallback_response["related_products"].append(match['metadata']['text'])
+
+                elif "available" in query.lower():
                     product_name = query.split("available")[0].strip()  # Extract product name
                     matching_products = [p for p in product_list if product_name.lower() in p['title'].lower()]
                     
-                    for product in matching_products:
-                        availability = 'in stock' if product['inventory_quantity'] > 0 else 'out of stock'
-                        fallback_response["related_products"].append(f"{product['title']} is {availability} with {product['inventory_quantity']} units available.")
+                    if matching_products:
+                        for product in matching_products:
+                            availability = 'in stock' if product['inventory_quantity'] > 0 else 'out of stock'
+                            fallback_response["related_products"].append(f"{product['title']} is {availability} with {product['inventory_quantity']} units available.")
+                    else:
+                        # Extract product names from the query
+                        product_names = [word for word in query.split() if word.lower() not in ["available", "is", "the", "in", "stock"]]
+                        
+                        if product_names:
+                            # Look for products that match the names found in the query
+                            available_products = []
+                            for product in product_list:
+                                if any(name.lower() in product['title'].lower() for name in product_names):
+                                    # Add the product details if it's available
+                                    available_products.append(f"{product['title']} is {'in stock' if product['inventory_quantity'] > 0 else 'out of stock'} with inventory quantity {product['inventory_quantity']}.")
 
-                # Check if related products were found
-                if not fallback_response["related_products"]:
-                    fallback_response["related_products"].append("No related products found.")
+                            # If available products were found, add them to the response
+                            if available_products:
+                                fallback_response["related_products"].extend(available_products)
+                            else:
+                                fallback_response["related_products"].append("No products found matching your query.")
+                        else:
+                            fallback_response["related_products"].append("No specific product mentioned in the query.")
+                            
+                
+                elif "how many" in query.lower() and "available" in query.lower():
+                    product_name = query.split("how many")[1].strip()  # Extract product name
+                    matching_products = [p for p in product_list if product_name.lower() in p['title'].lower()]
+                    
+                    if matching_products:
+                        for product in matching_products:
+                            fallback_response["related_products"].append(f"There are {product['inventory_quantity']} units of {product['title']} available.")
+                    else:
+                        fallback_response["related_products"].append("No products found matching your query.")
+
+
+
+                elif "most expensive" in query.lower():
+                    # Identify the most expensive product
+                    most_expensive_product = max(product_list, key=lambda x: x['price'], default=None)
+                    if most_expensive_product:
+                        fallback_response["related_products"].append(f"{most_expensive_product['title']} priced at {most_expensive_product['price']}")
+
+                elif "cheapest" in query.lower():
+                    # Identify the cheapest product
+                    cheapest_product = min(product_list, key=lambda x: x['price'], default=None)
+                    if cheapest_product:
+                        fallback_response["related_products"].append(f"{cheapest_product['title']} priced at {cheapest_product['price']}")
+
+                elif "price" in query.lower():
+                    product_name = query.split("price")[1].strip()  # Extract product name
+                    matching_products = [p for p in product_list if product_name.lower() in p['title'].lower()]
+                    
+                    if matching_products:
+                        for product in matching_products:
+                            fallback_response["related_products"].append(f"The price of {product['title']} is {product['price']}.")
+                    else:                       
+                        # Extract the product name and find its price
+                        for match in pinecone_response['matches']:
+                            if match['metadata']['text'].lower().startswith(query.split(" ")[-1].lower()):
+                                fallback_response["related_products"].append(f"{match['metadata']['text']} priced at {match['metadata']['price']}")
+
+                elif "compare" in query.lower():
+                    # Handle product comparison logic
+                    product_names = [word for word in query.split() if word.lower() not in ["compare", "the", "and", "which"]]
+                    products_to_compare = [prod for prod in product_list if prod['title'] in product_names]
+
+                    if len(products_to_compare) == 2:
+                        comparison_result = f"{products_to_compare[0]['title']} has {products_to_compare[0]['inventory_quantity']} in stock, priced at {products_to_compare[0]['price']}. " \
+                                            f"{products_to_compare[1]['title']} has {products_to_compare[1]['inventory_quantity']} in stock, priced at {products_to_compare[1]['price']}."
+                        fallback_response["related_products"].append(comparison_result)
+
 
                 return Response(fallback_response)
 
@@ -160,7 +257,6 @@ def get_insights(request):
                     "confidence": confidence
                 }
             }
-            
             return Response(formatted_response)
 
         except Exception as general_exception:
