@@ -120,11 +120,18 @@ def get_insights(request):
             # Format the output
             answer = response.get("answer", "I couldn't find an answer.")
             score = response.get("score", 0)
+            if score >= 0.8:
+                confidence = "High Confidence"
+            elif 0.5 <= score < 0.8:
+                confidence = "Moderate Confidence"
+            else:
+                confidence = "Low Confidence"
 
             formatted_response = {
                 "insights": {
                     "answer": answer,
-                    "score": score
+                    "score": score,
+                    "confidence": confidence
                 }
             }
             return Response(formatted_response)
