@@ -1,6 +1,5 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from pinecone_integration.pinecone_helper import index_shopify_data, query_with_rag
 import shopify
 import os
 from decouple import config
@@ -36,43 +35,12 @@ if response.status_code == 200:
 else:
     print(f"Error {response.status_code}: {response.json()}")
     
-# @api_view(['GET'])
-# def get_insights(request):
-#     query = request.query_params.get('query', '')
-
-#     if query:
-#         # Index Shopify data if necessary
-#         index_shopify_data()
-
-#         # Get AI-powered insights
-#         response = query_with_rag(query)
-#         return Response({"insights": response})
-    
-#     return Response({"error": "No query provided."})
-
 # Function to set up Shopify session
 def shopify_session():
     shop_url =f"https://{API_KEY}:{PASSWORD}@{SHOP_NAME}.myshopify.com/admin"
     print("shop url ",shop_url)
     shopify.ShopifyResource.set_site(shop_url)
 
-# Fetch products from Shopify
-# @api_view(['GET'])
-# def get_shopify_products(request):
-#     print("get shopify products request ")
-#     print(f"Request type - get shopify products: {type(request)}")
-#     shopify_session()
-#     products = shopify.Product.find()
-#     product_list = []
-#     for product in products:
-#         product_list.append({
-#         "id": product.id,
-#         "title": product.title,
-#         "inventory_quantity":
-#         product.variants[0].inventory_quantity,
-#         "price": product.variants[0].price
-#     })
-#     return Response({"products": product_list})
     
 @api_view(['GET'])
 def get_shopify_products(request):
@@ -96,6 +64,8 @@ def get_shopify_products(request):
         print("Error fetching Shopify products:", str(e))
         return Response({"error": str(e)}, status=500)
 
+
+
 # Fetch recent orders from Shopify
 @api_view(['GET'])
 def get_shopify_orders(request):
@@ -117,22 +87,6 @@ def get_shopify_orders(request):
             ]
         })
     return Response({"orders": order_list})
-
-# Fetch customer data from Shopify
-# @api_view(['GET'])
-# def get_shopify_customers(request):
-#     shopify_session()
-#     customers = shopify.Customer.find()
-#     customer_list = []
-#     for customer in customers:
-#         customer_list.append({
-#             "id": customer.id,
-#             "email": customer.email,
-#             "first_name": customer.first_name,
-#             "last_name": customer.last_name,
-#             "orders_count": customer.orders_count
-#         })
-#     return Response({"customers": customer_list})
 
 
 @api_view(['GET'])
