@@ -46,14 +46,12 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 # List existing indexes and their dimensions
 indexes = pc.list_indexes()
-for index in indexes:
-    print(f"Index: {index.name}, Dimension: {index.dimension}")
+
 
 
 # Ensure the index exists, create it if not
 index_name = 'ecommerce-data-768'
-if index_name not in pc.list_indexes().names():
-    print("index name ",index_name)
+if index_name not in pc.list_indexes().names():   
     pc.create_index(
         name=index_name, 
         dimension=768,  # Check the dimensionality of your model output
@@ -63,14 +61,11 @@ if index_name not in pc.list_indexes().names():
             region='us-east-1'
         )
     )
-print ("pc.Index(index_name) ",pc.Index(index_name))
 # Access the index
 index = pc.Index(index_name)
-print("index ",index)
 
 @api_view(['GET'])
 def get_insights(request):
-    print("Received query params:", request.query_params)
     query = request.query_params.get('query', '')
 
     if query:
@@ -87,15 +82,12 @@ def get_insights(request):
                     "inventory_quantity": product.variants[0].inventory_quantity,
                     "price": product.variants[0].price
                 })
-            print("products ", product_list)
 
             # Prepare vectors for Pinecone indexing
             vectors = []
             for product in product_list:
                 if isinstance(product, dict):
                     vector_value = create_vector_from_product(product)
-                    # Check the shape of the vector
-                    print(" len(vector_value) ",len(vector_value))
                     assert len(vector_value) == 768  # Ensure this matches your index
                     vectors.append({
                         'id': str(product['id']),
@@ -109,13 +101,7 @@ def get_insights(request):
             if vectors:
                 try:
                     upsert_response = index.upsert(vectors)
-                    print("Upsert response:", upsert_response)
                 except Exception as upsert_exception:
-                    print("Exception attributes:", upsert_exception.__dict__)
-                    print("Exception type:", type(upsert_exception))
-
-                    
-                    print("Error during upsert:", str(upsert_exception))
                     # Check if the exception contains specific error information
                     if hasattr(upsert_exception, 'code'):
                         print("Error code:", upsert_exception.code)
@@ -124,15 +110,13 @@ def get_insights(request):
                     return JsonResponse({'error': str(upsert_exception)}, status=400)
             # Search the Pinecone index using the query
             pinecone_response = index.query(vector=create_vector_from_product({'title': query, 'price': '0.00', 'inventory_quantity': 0}), top_k=5, include_metadata=True)
-            print("pinecone_response ",pinecone_response)
+            
             if pinecone_response['matches']:
-                context = pinecone_response['matches'][0]['metadata']['text']
+                context = " ".join([match['metadata']['text'] for match in pinecone_response['matches'] if match['metadata']['text']])
             else:
                 context = "No relevant data found"
-            print("context ",context)
             # Generate AI-powered response using Hugging Face's QA pipeline
             response = qa_pipeline(question=query, context=context)
-            print("pipeline response ",response)
             # Format the output
             answer = response.get("answer", "I couldn't find an answer.")
             score = response.get("score", 0)
@@ -143,12 +127,10 @@ def get_insights(request):
                     "score": score
                 }
             }
-            print("formatted_response ",formatted_response)
             return Response(formatted_response)
 
 
         except Exception as general_exception:
-            print("An error occurred:", str(general_exception))
             return JsonResponse({'error': str(general_exception)}, status=400)
 
     return JsonResponse({'success': True})
