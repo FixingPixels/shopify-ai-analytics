@@ -82,7 +82,6 @@ def get_insights(request):
                     "inventory_quantity": product.variants[0].inventory_quantity,
                     "price": float(product.variants[0].price)
                 })
-
             # Prepare a list for exact matches
             exact_matches = []
 
@@ -130,11 +129,13 @@ def get_insights(request):
 
             # Search the Pinecone index using the query if no direct match was found
             pinecone_response = index.query(vector=create_vector_from_product({'title': query, 'price': '0.00', 'inventory_quantity': 0}), top_k=10, include_metadata=True)
-            context = " ".join([match['metadata']['text'] for match in pinecone_response['matches']]) if pinecone_response['matches'] else "No relevant data found"
             
+            context = " ".join([match['metadata']['text'] for match in pinecone_response['matches']]) if pinecone_response['matches'] else "No relevant data found"
+
+
             # Generate AI-powered response using Hugging Face's QA pipeline
             response = qa_pipeline(question=query, context=context)
-            
+
             # Determine confidence level
             score = response.get("score", 0)
             confidence = (
@@ -149,7 +150,16 @@ def get_insights(request):
                     "message": "We couldn't find an exact match, but here are some related products:",
                     "related_products": []
                 }
-
+                # Check if pipeline response has a valid answer
+                if response.get('answer') and response['score'] > 0:
+                    # Return the pipeline answer if available and the score is acceptable
+                    final_response = {
+                        "message": "AI answer with low confidence level",
+                        "answer": response['answer']
+                    }                
+                    # Return the final response
+                    fallback_response["related_products"].append(final_response)
+                
                 # Dynamic handling based on the query context
                 if "out of stock" in query.lower() or "currently out of stock" in query.lower():
                     # Only add products that are out of stock
@@ -223,6 +233,36 @@ def get_insights(request):
                     if cheapest_product:
                         fallback_response["related_products"].append(f"{cheapest_product['title']} priced at {cheapest_product['price']}")
 
+                # Handling "best" query
+                elif "best" in query.lower():
+                    # Logic for determining the best product based on stock, price, or other criteria
+                    best_products = []
+
+                    # Option 1: If the best is defined by the highest price (luxury items or premium quality)
+                    best_by_price = max(product_list, key=lambda x: x['price'], default=None)
+                    if best_by_price:
+                        best_products.append(f"{best_by_price['title']} is priced at {best_by_price['price']} and has {best_by_price['inventory_quantity']} units in stock.")
+
+                    # Option 2: If the best is defined by high stock (high demand, well-supplied items)
+                    best_by_stock = max(product_list, key=lambda x: x['inventory_quantity'], default=None)
+                    if best_by_stock:
+                        best_products.append(f"{best_by_stock['title']} has the highest stock of {best_by_stock['inventory_quantity']} units and is priced at {best_by_stock['price']}.")
+
+                    # Option 3: You can also add a condition to combine price and stock if needed
+                    if best_by_price and best_by_stock and best_by_price['id'] != best_by_stock['id']:
+                        best_products.append(f"For a balance of price and stock: {best_by_stock['title']} is priced at {best_by_stock['price']} and has {best_by_stock['inventory_quantity']} units in stock.")
+
+                    # Option 4: Alternatively, filter for products that have a balance of both criteria.
+                    for product in product_list:
+                        if product['price'] > 0 and product['inventory_quantity'] > 0:
+                            best_products.append(f"{product['title']} is priced at {product['price']} and has {product['inventory_quantity']} units available.")
+
+                    if not best_products:
+                        best_products.append("We couldn't find a product that matches the criteria for 'best'.")
+
+                    fallback_response["related_products"].append(best_products)
+
+                
                 elif "price" in query.lower():
                     product_name = query.split("price")[1].strip()  # Extract product name
                     matching_products = [p for p in product_list if product_name.lower() in p['title'].lower()]
