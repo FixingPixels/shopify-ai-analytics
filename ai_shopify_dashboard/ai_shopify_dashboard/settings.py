@@ -9,11 +9,15 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import dj_database_url
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env()
 
 
 # Quick-start development settings - unsuitable for production
@@ -83,14 +87,7 @@ WSGI_APPLICATION = "ai_shopify_dashboard.wsgi.application"
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ai_shopify_analytics', 
-        'USER': 'ai_shopify',
-        'PASSWORD': 'ai_shopify@123', 
-        'HOST': 'localhost',
-        'PORT': '',
-    }
+    'default': dj_database_url.parse(env('DATABASE_URL'))
 }
 
 
