@@ -36,7 +36,7 @@ click-repl==0.3.0
 colorama==0.4.6
 colorgram.py==1.2.0
 comm==0.2.2
-command-not-found==0.3
+# command-not-found==0.3
 contourpy==1.2.0
 crispy-bootstrap5==2023.10
 cryptography==3.4.8
