@@ -8,17 +8,17 @@ from requests.auth import HTTPBasicAuth
 
 
 # Function to load .env variables
-def load_env(file_path):
-    with open(file_path) as f:
-        for line in f:
-            if line.startswith("#") or not line.strip():
-                continue  # Skip comments and empty lines
-            key, value = line.strip().split("=", 1)
-            os.environ[key] = value.strip('"')
+# def load_env(file_path):
+#     with open(file_path) as f:
+#         for line in f:
+#             if line.startswith("#") or not line.strip():
+#                 continue  # Skip comments and empty lines
+#             key, value = line.strip().split("=", 1)
+#             os.environ[key] = value.strip('"')
 
-base_dir = os.path.dirname(os.path.abspath(__file__))  # Get the current directory
-env_path = os.path.join(base_dir, '.env')
-load_env(env_path)
+# base_dir = os.path.dirname(os.path.abspath(__file__))  # Get the current directory
+# env_path = os.path.join(base_dir, '.env')
+# load_env(env_path)
 
 SHOP_NAME = os.getenv('SHOPIFY_STORE_NAME')
 API_KEY = os.getenv('SHOPIFY_API_KEY')

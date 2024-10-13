@@ -17,7 +17,11 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-environ.Env.read_env()
+# environ.Env.read_env()
+# In local development, read from .env file
+if os.getenv('DJANGO_ENV') == 'development':
+    environ.Env.read_env(os.path.join(BASE_DIR, '.env'))  # Load .env only in development
+
 
 
 # Quick-start development settings - unsuitable for production
