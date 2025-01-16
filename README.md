@@ -50,12 +50,14 @@ uv pip sync requirements.lock
 
 ### 4. Set up environment variables
 Create a .env file in the project root and add the following:
+```bash
 PINECONE_API_KEY="your_pinecone_api_key"
 PINECONE_ENVIRONMENT="us-west1-gcp"
 OPENAI_API_KEY="your_openai_api_key"
 SHOPIFY_API_KEY="your_shopify_api_key"
 SHOPIFY_PASSWORD="your_shopify_password"
 SHOPIFY_STORE_URL="https://your-store.myshopify.com/admin"
+```
 
 ### 5. Initialize Pinecone
 Ensure Pinecone is initialized and the index is created before running the app:
